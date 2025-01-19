@@ -6,6 +6,9 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 $auth = new Auth();
+
+// Bepaal of we op de homepagina zijn
+$is_homepage = basename($_SERVER['PHP_SELF']) === 'index.php';
 ?>
 <!DOCTYPE html>
 <html lang="nl">
@@ -20,8 +23,11 @@ $auth = new Auth();
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <?php if ($is_homepage): ?>
+    <script src="<?php echo SITE_URL; ?>/assets/js/home.js" defer></script>
+    <?php endif; ?>
 </head>
-<body>
+<body class="bg-gray-50">
     <nav class="nav-container">
         <div class="nav-content">
             <a href="<?php echo SITE_URL; ?>" class="nav-brand">

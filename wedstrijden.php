@@ -2,9 +2,12 @@
 require_once 'includes/config.php';
 require_once 'includes/db.php';
 require_once 'includes/FootballMatch.php';
+require_once 'includes/ApiFootball.php';
 
 $match = new FootballMatch();
+$apiFootball = new ApiFootball();
 $competitions = $match->getAllCompetitions();
+$liveMatches = $apiFootball->getLiveMatches();
 
 // Filter op competitie als er een is geselecteerd
 $selected_competition = isset($_GET['competitie']) ? (int)$_GET['competitie'] : null;
@@ -26,113 +29,65 @@ if ($selected_competition) {
 include 'includes/header.php';
 ?>
 
-<div class="max-w-6xl mx-auto mt-8">
-    <!-- Competitie filter -->
-    <div class="mb-8">
-        <h2 class="text-2xl font-bold mb-4">Competities</h2>
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            <?php foreach ($competitions as $competition): ?>
-                <a href="?competitie=<?php echo $competition['id']; ?>" 
-                   class="block p-4 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow <?php echo ($selected_competition == $competition['id']) ? 'ring-2 ring-blue-500' : ''; ?>">
-                    <h3 class="font-semibold"><?php echo htmlspecialchars($competition['naam']); ?></h3>
-                    <p class="text-sm text-gray-600">
-                        <?php echo $competition['land'] ? htmlspecialchars($competition['land']) : ($competition['type'] == 'CUP' ? 'Internationaal' : ''); ?>
-                    </p>
-                </a>
-            <?php endforeach; ?>
-            <?php if ($selected_competition): ?>
-                <a href="?" class="block p-4 bg-gray-100 rounded-lg shadow-md hover:shadow-lg transition-shadow text-center">
-                    <span class="font-semibold">Toon Alles</span>
-                </a>
-            <?php endif; ?>
-        </div>
-    </div>
-
-    <?php if ($selected_competition): ?>
-        <!-- Wedstrijden voor geselecteerde competitie -->
-        <div class="bg-white rounded-lg shadow-md p-6">
-            <h2 class="text-2xl font-bold mb-4">Wedstrijden <?php echo htmlspecialchars($competition_name); ?></h2>
-            
-            <?php if (empty($matches)): ?>
-                <p class="text-gray-600">Geen wedstrijden gevonden voor deze competitie.</p>
+<!-- Live Wedstrijden Sectie -->
+<div class="bg-gradient-to-r from-blue-900 to-blue-800 py-16">
+    <div class="container mx-auto px-4">
+        <h2 class="text-3xl font-bold text-white mb-8 text-center">Live Wedstrijden</h2>
+        
+        <div class="live-matches-container">
+            <?php if (empty($liveMatches)): ?>
+                <div class="text-center text-white text-lg">
+                    <p>Er zijn momenteel geen live wedstrijden.</p>
+                </div>
             <?php else: ?>
-                <div class="space-y-4">
-                    <?php foreach ($matches as $match): ?>
-                        <div class="border-b pb-4">
-                            <div class="flex justify-between items-center">
-                                <div class="flex-1 text-right"><?php echo htmlspecialchars($match['team1']); ?></div>
-                                <div class="mx-4 font-bold">
-                                    <?php echo $match['uitslag'] ? htmlspecialchars($match['uitslag']) : 'vs'; ?>
-                                </div>
-                                <div class="flex-1 text-left"><?php echo htmlspecialchars($match['team2']); ?></div>
-                            </div>
-                            <div class="text-center text-sm text-gray-600 mt-2">
-                                <?php echo date('d-m-Y H:i', strtotime($match['datum'])); ?>
+                <?php
+                // Groepeer live wedstrijden per competitie
+                $liveMatchesByLeague = [];
+                foreach ($liveMatches as $match) {
+                    $league = $match['league'];
+                    if (!isset($liveMatchesByLeague[$league])) {
+                        $liveMatchesByLeague[$league] = [];
+                    }
+                    $liveMatchesByLeague[$league][] = $match;
+                }
+                ?>
+
+                <div class="grid grid-cols-1 gap-8">
+                    <?php foreach ($liveMatchesByLeague as $league => $matches): ?>
+                        <div class="bg-white/10 backdrop-blur-sm rounded-xl p-6">
+                            <h3 class="text-xl font-semibold text-white mb-4"><?php echo htmlspecialchars($league); ?></h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <?php foreach ($matches as $match): ?>
+                                    <div class="bg-white rounded-lg shadow-lg overflow-hidden transform transition-all duration-300 hover:scale-105">
+                                        <div class="p-4">
+                                            <div class="flex items-center justify-between mb-2">
+                                                <div class="flex items-center space-x-2 flex-1">
+                                                    <img src="<?php echo htmlspecialchars($match['team1_logo']); ?>" alt="" class="w-6 h-6 object-contain">
+                                                    <span class="font-medium text-sm"><?php echo htmlspecialchars($match['team1']); ?></span>
+                                                </div>
+                                                <div class="px-2 py-1 bg-blue-100 rounded text-sm">
+                                                    <span class="font-bold text-blue-800"><?php echo $match['score1']; ?> - <?php echo $match['score2']; ?></span>
+                                                </div>
+                                                <div class="flex items-center space-x-2 flex-1 justify-end">
+                                                    <span class="font-medium text-sm"><?php echo htmlspecialchars($match['team2']); ?></span>
+                                                    <img src="<?php echo htmlspecialchars($match['team2_logo']); ?>" alt="" class="w-6 h-6 object-contain">
+                                                </div>
+                                            </div>
+                                            <div class="text-center">
+                                                <span class="inline-block px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-medium">
+                                                    <?php echo htmlspecialchars($match['time']); ?>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
                             </div>
                         </div>
                     <?php endforeach; ?>
                 </div>
             <?php endif; ?>
         </div>
-    <?php else: ?>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <!-- Aankomende Wedstrijden -->
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <h2 class="text-2xl font-bold mb-4">Aankomende Wedstrijden</h2>
-                
-                <?php if (empty($upcomingMatches)): ?>
-                    <p class="text-gray-600">Geen aankomende wedstrijden gepland.</p>
-                <?php else: ?>
-                    <div class="space-y-4">
-                        <?php foreach ($upcomingMatches as $match): ?>
-                            <div class="border-b pb-4">
-                                <div class="flex justify-between items-center">
-                                    <div class="flex-1 text-right"><?php echo htmlspecialchars($match['team1']); ?></div>
-                                    <div class="mx-4 font-bold">vs</div>
-                                    <div class="flex-1 text-left"><?php echo htmlspecialchars($match['team2']); ?></div>
-                                </div>
-                                <div class="text-center text-sm text-gray-600 mt-2">
-                                    <?php echo date('d-m-Y H:i', strtotime($match['datum'])); ?>
-                                    <?php if ($match['competitie_naam']): ?>
-                                        <br>
-                                        <span class="text-blue-600"><?php echo htmlspecialchars($match['competitie_naam']); ?></span>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                <?php endif; ?>
-            </div>
-
-            <!-- Recente Uitslagen -->
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <h2 class="text-2xl font-bold mb-4">Recente Uitslagen</h2>
-                
-                <?php if (empty($recentResults)): ?>
-                    <p class="text-gray-600">Geen recente uitslagen beschikbaar.</p>
-                <?php else: ?>
-                    <div class="space-y-4">
-                        <?php foreach ($recentResults as $result): ?>
-                            <div class="border-b pb-4">
-                                <div class="flex justify-between items-center">
-                                    <div class="flex-1 text-right"><?php echo htmlspecialchars($result['team1']); ?></div>
-                                    <div class="mx-4 font-bold"><?php echo htmlspecialchars($result['uitslag']); ?></div>
-                                    <div class="flex-1 text-left"><?php echo htmlspecialchars($result['team2']); ?></div>
-                                </div>
-                                <div class="text-center text-sm text-gray-600 mt-2">
-                                    <?php echo date('d-m-Y', strtotime($result['datum'])); ?>
-                                    <?php if ($result['competitie_naam']): ?>
-                                        <br>
-                                        <span class="text-blue-600"><?php echo htmlspecialchars($result['competitie_naam']); ?></span>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-                <?php endif; ?>
-            </div>
-        </div>
-    <?php endif; ?>
+    </div>
 </div>
 
 <?php include 'includes/footer.php'; ?> 
