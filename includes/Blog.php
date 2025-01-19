@@ -14,8 +14,13 @@ class Blog {
                 INSERT INTO blogs (titel, slug, content, categorie_id, gebruiker_id, thumbnail) 
                 VALUES (?, ?, ?, ?, ?, ?)
             ");
-            return $stmt->execute([$titel, $slug, $content, $categorie_id, $gebruiker_id, $thumbnail]);
+            $result = $stmt->execute([$titel, $slug, $content, $categorie_id, $gebruiker_id, $thumbnail]);
+            if (!$result) {
+                error_log("Blog toevoegen mislukt: " . print_r($stmt->errorInfo(), true));
+            }
+            return $result;
         } catch (PDOException $e) {
+            error_log("Database fout bij blog toevoegen: " . $e->getMessage());
             return false;
         }
     }

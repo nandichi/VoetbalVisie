@@ -5,7 +5,7 @@ define('DB_PASS', 'Naoufal2004!');
 define('DB_NAME', 'voetbalvisie');
 
 // Aangepast voor de PHP development server
-define('SITE_URL', 'http://localhost:8080');
+define('SITE_URL', 'http://localhost:8000');
 define('SITE_NAME', 'VoetbalVisie');
 
 // API Football configuratie

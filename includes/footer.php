@@ -76,7 +76,7 @@ $current_year = date('Y');
                     <div class="space-y-2">
                         <p class="text-gray-300">
                             <i class="fas fa-map-marker-alt mr-2"></i>
-                            Amsterdam, Nederland
+                            Ede, Nederland
                         </p>
                         <p class="text-gray-300">
                             <i class="fas fa-envelope mr-2"></i>
@@ -84,7 +84,7 @@ $current_year = date('Y');
                         </p>
                         <p class="text-gray-300">
                             <i class="fas fa-phone mr-2"></i>
-                            +31 (0)20 123 4567
+                            +31 6 38 10 72 71
                         </p>
                     </div>
                 </div>
